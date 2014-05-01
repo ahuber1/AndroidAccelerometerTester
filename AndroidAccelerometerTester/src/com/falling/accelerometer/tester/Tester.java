@@ -16,7 +16,7 @@ public class Tester extends Activity {
 	private SensorManager manager;
 	private TextView vector;
 	private TextView angle;
-	private long startTime;
+	private long time;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -26,7 +26,7 @@ public class Tester extends Activity {
     	// Set this Activity's content view
         setContentView(R.layout.activity_accelerometer);
         
-        startTime = System.currentTimeMillis();
+        time = System.currentTimeMillis();
 		
 		vector = (TextView) findViewById(R.id.vector);
 		angle = (TextView) findViewById(R.id.angle);
@@ -42,8 +42,27 @@ public class Tester extends Activity {
 		
 		@Override
 		public void onSensorChanged(SensorEvent event) {
-			vector.setText(String.format("{%2.0f, %2.0f, %2.0f}", event.values[0], 
-					event.values[1], event.values[2]));
+			if(System.currentTimeMillis() - time >= 125) {
+				double accelx = event.values[0];
+				double accely = event.values[1];
+				double accelz = event.values[2];
+				
+				double gravx = 0;
+				double gravy = accelz > accely ? 0 : 9.8;
+				double gravz = accelz > accely ? 9.8 : 0;
+				
+				double accelmag = Math.sqrt(Math.pow(accelx, 2) + Math.pow(accely, 2) + Math.pow(accelz, 2));
+				double gravmag = 9.8;
+				
+				double num = accelx * gravx + accely * gravy + accelz * gravz;
+				double den = accelmag * gravmag;
+				
+				double angle = Math.toDegrees(Math.acos(num / den));
+				
+				vector.setText(String.format("{%2.2f, %2.2f, %2.2f}", accelx, accely, accelz));
+				Tester.this.angle.setText(String.format("%2.2f degrees", angle));
+				time = System.currentTimeMillis();
+			}
 		}
 		
 		@Override
